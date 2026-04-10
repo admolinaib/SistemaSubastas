@@ -5,12 +5,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace SistemaSubastas.Domain.Subastas
 {
     public class Subasta
     {
         public Producto Producto { get; set; }
+        public Guid Id { get; } = Guid.NewGuid();
         public decimal PrecioActual { get; set; }
         public Usuario? Ganador { get; set; }
         public bool Activa { get; private set; } = true;
@@ -40,7 +42,15 @@ namespace SistemaSubastas.Domain.Subastas
 
         public void Cerrar()
         {
+            if (!Activa) return;
             Activa = false;
+
+            string mensaje = Ganador != null
+                ? $"✅ Subasta cerrada.\nGanador: {Ganador.Nombre}\nPrecio final: ${Producto.CalcularPrecioFinal(PrecioActual):N2}"
+                : "🔒 Subasta cerrada sin ganador.";
+
+            MessageBox.Show(mensaje, "Subasta finalizada",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         public void Actualizar()

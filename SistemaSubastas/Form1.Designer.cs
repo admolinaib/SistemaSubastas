@@ -32,7 +32,6 @@
             this.dgvSubastas = new System.Windows.Forms.DataGridView();
             this.txtMonto = new System.Windows.Forms.TextBox();
             this.btnOfertar = new System.Windows.Forms.Button();
-            this.btnCerrar = new System.Windows.Forms.Button();
             this.lblProducto = new System.Windows.Forms.Label();
             this.lblPrecioFinal = new System.Windows.Forms.Label();
             this.lblGanador = new System.Windows.Forms.Label();
@@ -78,18 +77,6 @@
             this.btnOfertar.UseVisualStyleBackColor = true;
             this.btnOfertar.Visible = false;
             this.btnOfertar.Click += new System.EventHandler(this.btnOfertar_Click);
-            // 
-            // btnCerrar
-            // 
-            this.btnCerrar.Location = new System.Drawing.Point(464, 311);
-            this.btnCerrar.Margin = new System.Windows.Forms.Padding(2);
-            this.btnCerrar.Name = "btnCerrar";
-            this.btnCerrar.Size = new System.Drawing.Size(56, 19);
-            this.btnCerrar.TabIndex = 3;
-            this.btnCerrar.Text = "Cerrar";
-            this.btnCerrar.UseVisualStyleBackColor = true;
-            this.btnCerrar.Visible = false;
-            this.btnCerrar.Click += new System.EventHandler(this.btnCerrar_Click);
             // 
             // lblProducto
             // 
@@ -180,7 +167,9 @@
             // 
             // timerSubasta
             // 
+            this.timerSubasta.Enabled = true;
             this.timerSubasta.Interval = 1000;
+            this.timerSubasta.Tick += new System.EventHandler(this.timerSubasta_Tick);
             // 
             // Form1
             // 
@@ -195,7 +184,6 @@
             this.Controls.Add(this.lblGanador);
             this.Controls.Add(this.lblPrecioFinal);
             this.Controls.Add(this.lblProducto);
-            this.Controls.Add(this.btnCerrar);
             this.Controls.Add(this.btnOfertar);
             this.Controls.Add(this.txtMonto);
             this.Controls.Add(this.dgvSubastas);
@@ -214,7 +202,6 @@
         private System.Windows.Forms.DataGridView dgvSubastas;
         private System.Windows.Forms.TextBox txtMonto;
         private System.Windows.Forms.Button btnOfertar;
-        private System.Windows.Forms.Button btnCerrar;
         private System.Windows.Forms.Label lblProducto;
         private System.Windows.Forms.Label lblPrecioFinal;
         private System.Windows.Forms.Label lblGanador;

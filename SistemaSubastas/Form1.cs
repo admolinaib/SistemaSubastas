@@ -18,6 +18,7 @@ namespace SistemaSubastas
     {
         private readonly SubastaService _servicio = new SubastaService();
         private Subasta? _subastaActual;
+        private List<Subasta> _listaFiltrada = new();
         public Form1()
         {
             InitializeComponent();
@@ -30,15 +31,20 @@ namespace SistemaSubastas
                 if (_subastaActual == null)
                     throw new Exception("Seleccione una subasta de la lista.");
 
-                if (!decimal.TryParse(txtMonto.Text, out decimal monto))
-                    throw new Exception("Ingrese un monto numérico válido.");
+                decimal monto = 0;
+
+                // Descendente no necesita validar monto del textbox
+                if (_subastaActual.TipoSubasta == "Descendente")
+                {
+                    monto = _subastaActual.PrecioActual;
+                }
+                else
+                {
+                    if (!decimal.TryParse(txtMonto.Text, out monto))
+                        throw new Exception("Ingrese un monto numérico válido.");
+                }
 
                 var comprador = new Comprador("Usuario1");
-
-                // En subasta descendente el monto no importa, acepta el precio actual
-                if (_subastaActual.TipoSubasta == "Descendente")
-                    monto = _subastaActual.PrecioActual;
-
                 comprador.RealizarOferta(_subastaActual, monto);
 
                 ActualizarInfoSubasta();
@@ -58,7 +64,7 @@ namespace SistemaSubastas
             _servicio.CargarDatosDemo();
             ActualizarGrid();
 
-            timerSubasta.Interval = 1000; 
+            timerSubasta.Interval = 3000; 
             timerSubasta.Start();
         }
 
@@ -70,7 +76,6 @@ namespace SistemaSubastas
             lblGanador.Visible = true;
             txtMonto.Visible = true;
             btnOfertar.Visible = true;
-            btnCerrar.Visible = true;
             try
             {
                 if (cmbTipoProducto.SelectedItem == null || cmbTipoSubasta.SelectedItem == null)
@@ -93,37 +98,18 @@ namespace SistemaSubastas
         {
             if (e.RowIndex < 0 || e.RowIndex >= _servicio.Subastas.Count) return;
 
-            _subastaActual = _servicio.Subastas[e.RowIndex];
+            _subastaActual = _listaFiltrada[e.RowIndex];
             ActualizarInfoSubasta();
+
+            btnOfertar.Text = _subastaActual.TipoSubasta == "Descendente"
+                ? "Aceptar precio"
+                : "Ofertar";
+            txtMonto.Enabled = _subastaActual.TipoSubasta != "Descendente";
+            txtMonto.Text = _subastaActual.TipoSubasta == "Descendente"
+                ? "—"
+                : "";
         }
 
-        private void btnCerrar_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (_subastaActual == null)
-                    throw new Exception("Seleccione una subasta.");
-
-                _subastaActual.Cerrar();
-                ActualizarInfoSubasta();
-                ActualizarGrid();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-        }
-
-        private void timerSubasta_Tick(object sender, EventArgs e)
-        {
-            foreach (var s in _servicio.Subastas.Where(x => x.Activa).ToList())
-                s.Actualizar();
-
-            ActualizarGrid();
-
-            if (_subastaActual != null)
-                ActualizarInfoSubasta();
-        }
         private void ActualizarInfoSubasta()
         {
             if (_subastaActual == null) return;
@@ -141,8 +127,27 @@ namespace SistemaSubastas
         {
             int filaSeleccionada = dgvSubastas.CurrentCell?.RowIndex ?? -1;
 
+            var lista = _servicio.Subastas.AsEnumerable();
+
+            if (cmbTipoSubasta.SelectedItem != null)
+            {
+                string tipoSubasta = cmbTipoSubasta.SelectedItem.ToString()!;
+                lista = lista.Where(s => s.TipoSubasta == tipoSubasta);
+            }
+
+            if (cmbTipoProducto.SelectedItem != null)
+            {
+                string tipoProducto = cmbTipoProducto.SelectedItem.ToString()!
+                    .Replace("é", "e")   
+                    .Replace("ó", "o");  
+                lista = lista.Where(s =>
+                    s.Producto.GetType().Name.Contains(tipoProducto));
+            }
+
+            _listaFiltrada = lista.ToList();
+
             dgvSubastas.DataSource = null;
-            dgvSubastas.DataSource = _servicio.Subastas
+            dgvSubastas.DataSource = _listaFiltrada
                 .Select(s => new
                 {
                     Producto = s.Producto.Nombre,
@@ -161,11 +166,24 @@ namespace SistemaSubastas
         {
             lblTipoProducto.Visible = true;
             cmbTipoProducto.Visible = true;
+            ActualizarGrid();
         }
 
         private void cmbTipoProducto_SelectedIndexChanged(object sender, EventArgs e)
         {
             btnCrearSubasta.Visible = true;
+            ActualizarGrid();
+        }
+
+        private void timerSubasta_Tick(object sender, EventArgs e)
+        {
+            foreach (var s in _servicio.Subastas.Where(x => x.Activa).ToList())
+                s.Actualizar();
+
+            ActualizarGrid();
+
+            if (_subastaActual != null && _subastaActual.Activa)
+                ActualizarInfoSubasta();
         }
     }
 }
