@@ -13,7 +13,7 @@ namespace SistemaSubastas.Domain.Usuarios
 
         public override void RealizarOferta(Subasta subasta, decimal monto)
         {
-            throw new InvalidOperationException("Un espectador no puede ofertar.");
+            throw new InvalidOperationException("Un espectador no puede ofertar. ");
         }
     }
 }

@@ -19,6 +19,10 @@ namespace SistemaSubastas
         private readonly SubastaService _servicio = new SubastaService();
         private Subasta? _subastaActual;
         private List<Subasta> _listaFiltrada = new();
+
+        private bool EsModoEspectador =>
+            cmbTipoUsuario.SelectedItem?.ToString() == "Espectador";
+
         public Form1()
         {
             InitializeComponent();
@@ -58,6 +62,7 @@ namespace SistemaSubastas
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            cmbTipoUsuario.Items.AddRange(new string[] { "Comprador", "Espectador",});
             cmbTipoSubasta.Items.AddRange(new string[] { "Ascendente", "Descendente", "Cerrada" });
             cmbTipoProducto.Items.AddRange(new string[] { "Electrónico", "Alimenticio", "Ropa" });
 
@@ -96,9 +101,11 @@ namespace SistemaSubastas
 
         private void dgvSubastas_CellClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (EsModoEspectador) return;
             if (e.RowIndex < 0 || e.RowIndex >= _servicio.Subastas.Count) return;
 
             _subastaActual = _listaFiltrada[e.RowIndex];
+            _subastaActual.Iniciar();
             ActualizarInfoSubasta();
 
             btnOfertar.Text = _subastaActual.TipoSubasta == "Descendente"
@@ -129,13 +136,13 @@ namespace SistemaSubastas
 
             var lista = _servicio.Subastas.AsEnumerable();
 
-            if (cmbTipoSubasta.SelectedItem != null)
+            if (!EsModoEspectador && cmbTipoSubasta.SelectedItem != null)
             {
                 string tipoSubasta = cmbTipoSubasta.SelectedItem.ToString()!;
                 lista = lista.Where(s => s.TipoSubasta == tipoSubasta);
             }
 
-            if (cmbTipoProducto.SelectedItem != null)
+            if (!EsModoEspectador && cmbTipoProducto.SelectedItem != null)
             {
                 string tipoProducto = cmbTipoProducto.SelectedItem.ToString()!
                     .Replace("é", "e")   
@@ -164,6 +171,7 @@ namespace SistemaSubastas
 
         private void cmbTipoSubasta_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (EsModoEspectador) return;
             lblTipoProducto.Visible = true;
             cmbTipoProducto.Visible = true;
             ActualizarGrid();
@@ -171,6 +179,7 @@ namespace SistemaSubastas
 
         private void cmbTipoProducto_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (EsModoEspectador) return;
             btnCrearSubasta.Visible = true;
             ActualizarGrid();
         }
@@ -182,8 +191,39 @@ namespace SistemaSubastas
 
             ActualizarGrid();
 
-            if (_subastaActual != null && _subastaActual.Activa)
+            if (_subastaActual != null)
                 ActualizarInfoSubasta();
+        }
+
+        private void cmbTipoUsuario_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (EsModoEspectador)
+            {
+                _subastaActual = null;
+                cmbTipoSubasta.SelectedIndex = -1;
+                cmbTipoProducto.SelectedIndex = -1;
+
+                dgvSubastas.Visible = true;
+
+                txtMonto.Visible = false;
+                btnOfertar.Visible = false;
+                lblProducto.Visible = false;
+                lblPrecioFinal.Visible = false;
+                lblGanador.Visible = false;
+                lblTipoSubasta.Visible = false;
+                cmbTipoSubasta.Visible = false;
+                lblTipoProducto.Visible = false;
+                cmbTipoProducto.Visible = false;
+                btnCrearSubasta.Visible = false;
+   
+
+                ActualizarGrid();
+                return;
+            }
+
+            lblTipoSubasta.Visible = true;
+            cmbTipoSubasta.Visible = true;
+            ActualizarGrid();
         }
     }
 }

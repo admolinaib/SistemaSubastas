@@ -16,8 +16,9 @@ namespace SistemaSubastas.Domain.Subastas
         public decimal PrecioActual { get; set; }
         public Usuario? Ganador { get; set; }
         public bool Activa { get; private set; } = true;
+        public bool Iniciada { get; private set; } = false;
         public DateTime UltimaOferta { get; set; }
-        public int TiempoLimiteSegundos { get; set; } = 30;
+        public int TiempoLimiteSegundos { get; set; } = 10;
 
         public string TipoSubasta => _estrategia.TipoSubasta;
 
@@ -39,7 +40,12 @@ namespace SistemaSubastas.Domain.Subastas
             _estrategia.ProcesarOferta(this, usuario, monto);
             UltimaOferta = DateTime.Now;
         }
-
+        public void Iniciar()
+        {
+            if (Iniciada || !Activa) return;
+            Iniciada = true;
+            UltimaOferta = DateTime.Now;
+        }
         public void Cerrar()
         {
             if (!Activa) return;
@@ -55,7 +61,7 @@ namespace SistemaSubastas.Domain.Subastas
 
         public void Actualizar()
         {
-            if (!Activa) return;
+            if (!Activa || !Iniciada) return;
             _estrategia.Actualizar(this);
         }
     }
